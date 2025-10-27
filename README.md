@@ -14,7 +14,7 @@ A professional FastAPI application implementing a multi-tenant Notes API with st
 - **Docker Support**: Complete containerization with docker-compose
 - **API Documentation**: Auto-generated OpenAPI/Swagger documentation
 
-## 🏗️ Architecture
+## 🏗️ ArchitectureMulti-Tenant Notes API
 
 ```
 app/
@@ -30,6 +30,10 @@ app/
 │   └── schemas.py        # Request/response schemas
 ├── services/              # Business logic layer
 │   └── __init__.py       # Service classes
+|   ├── note_service.py    # Note service
+│   ├── organization_service.py # Organization service
+│   └── user_service.py # User service
+│
 └── main.py               # FastAPI application
 ```
 
