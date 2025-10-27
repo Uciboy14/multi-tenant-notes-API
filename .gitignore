@@ -156,3 +156,7 @@ tmp/
 # MongoDB data
 data/
 mongodb_data/
+
+
+# test files
+PROBLEM_FIXED.md

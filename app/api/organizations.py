@@ -1,7 +1,8 @@
 from fastapi import APIRouter, HTTPException, Depends, status
 from typing import List
 from app.models.schemas import Organization, OrganizationCreate
-from app.services import get_organization_service, OrganizationService
+from app.services import get_organization_service, OrganizationService, get_user_service, UserService
+from app.models.schemas import UserCreate, User
 import logging
 
 logger = logging.getLogger(__name__)
@@ -72,4 +73,50 @@ async def get_organization(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve organization"
+        )
+
+
+@router.post("/{org_id}/bootstrap", response_model=User, status_code=status.HTTP_201_CREATED)
+async def bootstrap_org(
+    org_id: str,
+    user_data: UserCreate,
+    user_service: UserService = Depends(get_user_service),
+    org_service: OrganizationService = Depends(get_organization_service)
+):
+    """
+    Bootstrap: Create the first admin user for an organization.
+    
+    This is a special endpoint that allows creating the first user without requiring
+    an existing user. This breaks the chicken-and-egg problem.
+    """
+    try:
+        # Verify organization exists
+        organization = await org_service.get_organization_by_id(org_id)
+        if not organization:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Organization not found"
+            )
+        
+        # Check if any users already exist
+        existing_users = await user_service.get_users_by_organization(org_id)
+        if existing_users:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Organization already has users. Use /users/ endpoint instead."
+            )
+        
+        # Create the bootstrap admin user
+        user = await user_service.create_user(user_data, org_id)
+        logger.info(f"Bootstrapped admin user: {user.email} in organization {org_id}")
+        
+        return user
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error bootstrapping organization {org_id}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to bootstrap organization"
         )

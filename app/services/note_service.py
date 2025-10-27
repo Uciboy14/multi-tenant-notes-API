@@ -30,6 +30,7 @@ class NoteService:
         note_dict = note_data.dict()
         note_dict["organization_id"] = ObjectId(organization_id)
         note_dict["created_by"] = ObjectId(created_by)
+        note_dict["created_at"] = datetime.utcnow()
         
         result = await self.collection.insert_one(note_dict)
         

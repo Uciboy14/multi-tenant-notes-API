@@ -23,8 +23,17 @@ class TenantAuthMiddleware(BaseHTTPMiddleware):
         # Skip auth middleware for public endpoints
         public_endpoints = ["/health", "/", "/docs", "/openapi.json", "/redoc"]
         
-        # Allow ALL organization endpoints without auth (public API)
+        # Allow public organization endpoints
         if request.url.path.startswith("/organizations/"):
+            # Allow POST /organizations/ (create org)
+            # Allow GET /organizations/{id} (get org - but this may need auth soon)
+            # Allow POST /organizations/{id}/bootstrap (bootstrap first user)
+            if request.method == "POST" and request.url.path.endswith("/bootstrap"):
+                return await call_next(request)
+            if request.method == "POST" and request.url.path == "/organizations/":
+                return await call_next(request)
+            # For now, allow all org endpoints without auth
+            # TODO: Add proper org-level auth
             return await call_next(request)
         
         # Allow other public endpoints

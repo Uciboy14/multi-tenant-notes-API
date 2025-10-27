@@ -29,6 +29,7 @@ class UserService:
         
         user_dict = user_data.dict()
         user_dict["organization_id"] = ObjectId(organization_id)
+        user_dict["created_at"] = datetime.utcnow()
         
         result = await self.collection.insert_one(user_dict)
         
