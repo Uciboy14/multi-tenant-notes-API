@@ -1,4 +1,4 @@
-from fastapi import HTTPException, Depends, Request
+from fastapi import HTTPException, Depends, Request, Header
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import Optional, Tuple, Callable
 from bson import ObjectId
@@ -65,21 +65,22 @@ class AuthMiddleware:
     @staticmethod
     async def get_current_user(
         request: Request,
+        x_org_id: str = Header(..., alias="X-Org-ID", description="Organization ID (MongoDB ObjectId)"),
+        x_user_id: str = Header(..., alias="X-User-ID", description="User ID (MongoDB ObjectId)"),
         user_service: UserService = Depends(get_user_service)
     ) -> Tuple[str, str, User]:
         """
         Extract and validate user information from headers.
+        
+        **Required Headers:**
+        - X-Org-ID: Your organization ID
+        - X-User-ID: Your user ID
+        
         Returns tuple of (org_id, user_id, user_object).
         """
-        # Extract headers
-        org_id = request.headers.get("X-Org-ID")
-        user_id = request.headers.get("X-User-ID")
-        
-        if not org_id or not user_id:
-            raise HTTPException(
-                status_code=401,
-                detail="Missing required headers: X-Org-ID and X-User-ID"
-            )
+        # Extract headers (already validated by FastAPI Header)
+        org_id = x_org_id
+        user_id = x_user_id
         
         # Validate ObjectId format
         if not ObjectId.is_valid(org_id) or not ObjectId.is_valid(user_id):

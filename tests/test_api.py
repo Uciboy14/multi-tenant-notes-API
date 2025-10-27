@@ -10,7 +10,7 @@ import os
 
 
 # Test database configuration
-TEST_DATABASE_URL = "mongodb://admin:password@localhost:27017/notes_api_test?authSource=admin"
+TEST_DATABASE_URL = "mongodb://localhost:27017/notes_api_test"
 TEST_DATABASE_NAME = "notes_api_test"
 
 
