@@ -8,10 +8,10 @@ from app.core.config import settings
 from bson import ObjectId
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 async def test_db():
     """Create a test database connection."""
-    test_url = "mongodb://admin:password@localhost:27017/notes_api_test?authSource=admin"
+    test_url = "mongodb://localhost:27017/notes_api_test"
     settings.mongodb_url = test_url
     settings.database_name = "notes_api_test"
     
