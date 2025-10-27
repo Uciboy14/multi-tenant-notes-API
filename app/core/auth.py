@@ -5,10 +5,52 @@ from bson import ObjectId
 from app.models.schemas import UserRole, User
 from app.services import get_user_service, UserService
 import logging
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
+from starlette.responses import Response
 
 logger = logging.getLogger(__name__)
 
 security = HTTPBearer(auto_error=False)
+
+
+class TenantAuthMiddleware(BaseHTTPMiddleware):
+    """Middleware that automatically extracts tenant/user from headers for every request."""
+    
+    async def dispatch(self, request: Request, call_next):
+        """Extract and validate tenant/user information from headers on every request."""
+        
+        # Skip auth middleware for public endpoints
+        public_endpoints = ["/health", "/", "/docs", "/openapi.json", "/redoc"]
+        if any(request.url.path.startswith(endpoint) for endpoint in public_endpoints):
+            return await call_next(request)
+        
+        # Extract headers
+        org_id = request.headers.get("X-Org-ID")
+        user_id = request.headers.get("X-User-ID")
+        
+        if not org_id or not user_id:
+            return Response(
+                status_code=401,
+                content='{"detail": "Missing required headers: X-Org-ID and X-User-ID"}',
+                media_type="application/json"
+            )
+        
+        # Validate ObjectId format
+        if not ObjectId.is_valid(org_id) or not ObjectId.is_valid(user_id):
+            return Response(
+                status_code=400,
+                content='{"detail": "Invalid organization or user ID format"}',
+                media_type="application/json"
+            )
+        
+        # Store validated IDs in request state for use in endpoints
+        request.state.org_id = org_id
+        request.state.user_id = user_id
+        
+        # Continue to the next middleware/endpoint
+        response = await call_next(request)
+        return response
 
 
 class AuthMiddleware:

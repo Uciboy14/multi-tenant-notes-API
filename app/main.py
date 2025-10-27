@@ -6,6 +6,7 @@ import logging
 
 from app.core.config import settings
 from app.core.database import connect_to_mongo, close_mongo_connection
+from app.core.auth import TenantAuthMiddleware
 from app.api import organizations, users, notes
 
 
@@ -36,6 +37,9 @@ app = FastAPI(
     description="A multi-tenant Notes API with role-based access control",
     lifespan=lifespan
 )
+
+# Add tenant authentication middleware first
+app.add_middleware(TenantAuthMiddleware)
 
 # Add CORS middleware
 app.add_middleware(
