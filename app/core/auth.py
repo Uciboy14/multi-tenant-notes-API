@@ -1,6 +1,6 @@
 from fastapi import HTTPException, Depends, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Callable
 from bson import ObjectId
 from app.models.schemas import UserRole, User
 from app.services import get_user_service, UserService
@@ -17,12 +17,18 @@ security = HTTPBearer(auto_error=False)
 class TenantAuthMiddleware(BaseHTTPMiddleware):
     """Middleware that automatically extracts tenant/user from headers for every request."""
     
-    async def dispatch(self, request: Request, call_next):
+    async def dispatch(self, request: Request, call_next: Callable) -> Response:
         """Extract and validate tenant/user information from headers on every request."""
         
         # Skip auth middleware for public endpoints
         public_endpoints = ["/health", "/", "/docs", "/openapi.json", "/redoc"]
-        if any(request.url.path.startswith(endpoint) for endpoint in public_endpoints):
+        
+        # Allow ALL organization endpoints without auth (public API)
+        if request.url.path.startswith("/organizations/"):
+            return await call_next(request)
+        
+        # Allow other public endpoints
+        elif any(request.url.path.startswith(endpoint) for endpoint in public_endpoints):
             return await call_next(request)
         
         # Extract headers

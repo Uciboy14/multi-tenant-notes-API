@@ -8,6 +8,13 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+def convert_objectids(obj: dict) -> dict:
+    """Convert ObjectId fields to strings."""
+    if isinstance(obj, dict):
+        return {k: str(v) if isinstance(v, ObjectId) else v for k, v in obj.items()}
+    return obj
+
+
 class NoteService:
     """Service for note operations."""
     
@@ -28,6 +35,8 @@ class NoteService:
         
         # Fetch the created note
         created_note = await self.collection.find_one({"_id": result.inserted_id})
+        if created_note:
+            created_note = convert_objectids(created_note)
         return Note(**created_note)
     
     async def get_note_by_id(self, note_id: str) -> Optional[Note]:
@@ -36,7 +45,10 @@ class NoteService:
             return None
         
         note = await self.collection.find_one({"_id": ObjectId(note_id)})
-        return Note(**note) if note else None
+        if note:
+            note = convert_objectids(note)
+            return Note(**note)
+        return None
     
     async def get_notes_by_organization(self, organization_id: str, skip: int = 0, limit: int = 100) -> List[Note]:
         """Get all notes in an organization."""
@@ -48,7 +60,7 @@ class NoteService:
         ).sort("created_at", -1).skip(skip).limit(limit)
         
         notes = await cursor.to_list(length=None)
-        return [Note(**note) for note in notes]
+        return [Note(**convert_objectids(note)) for note in notes]
     
     async def update_note(self, note_id: str, note_data: NoteUpdate) -> Optional[Note]:
         """Update note."""
@@ -65,7 +77,10 @@ class NoteService:
         
         # Fetch the updated note
         updated_note = await self.collection.find_one({"_id": ObjectId(note_id)})
-        return Note(**updated_note) if updated_note else None
+        if updated_note:
+            updated_note = convert_objectids(updated_note)
+            return Note(**updated_note)
+        return None
     
     async def delete_note(self, note_id: str) -> bool:
         """Delete note."""

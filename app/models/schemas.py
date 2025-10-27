@@ -42,11 +42,12 @@ class OrganizationCreate(OrganizationBase):
 
 class Organization(OrganizationBase):
     """Organization model with ID and timestamps."""
-    id: PyObjectId = Field(default_factory=lambda: str(ObjectId()), alias="_id")
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    id: str = Field(default="", alias="_id")
+    created_at: datetime
     
     model_config = {
         "populate_by_name": True,
+        "by_alias": True,
         "arbitrary_types_allowed": True,
     }
 
@@ -70,14 +71,15 @@ class UserUpdate(BaseModel):
 
 class User(UserBase):
     """User model with ID, role, and timestamps."""
-    id: PyObjectId = Field(default_factory=lambda: str(ObjectId()), alias="_id")
-    organization_id: PyObjectId
+    id: str = Field(default="", alias="_id")
+    organization_id: str
     role: UserRole
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime
     updated_at: Optional[datetime] = None
     
     model_config = {
         "populate_by_name": True,
+        "by_alias": True,
         "arbitrary_types_allowed": True,
     }
 
@@ -101,14 +103,15 @@ class NoteUpdate(BaseModel):
 
 class Note(NoteBase):
     """Note model with ID, organization, and timestamps."""
-    id: PyObjectId = Field(default_factory=lambda: str(ObjectId()), alias="_id")
-    organization_id: PyObjectId
-    created_by: PyObjectId
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    id: str = Field(default="", alias="_id")
+    organization_id: str
+    created_by: str
+    created_at: datetime
     updated_at: Optional[datetime] = None
     
     model_config = {
         "populate_by_name": True,
+        "by_alias": True,
         "arbitrary_types_allowed": True,
     }
 
