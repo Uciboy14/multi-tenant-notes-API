@@ -9,9 +9,17 @@ logger = logging.getLogger(__name__)
 
 
 def convert_objectids(obj: dict) -> dict:
-    """Convert ObjectId fields to strings."""
+    """Convert ObjectId fields to strings and handle _id mapping."""
     if isinstance(obj, dict):
-        return {k: str(v) if isinstance(v, ObjectId) else v for k, v in obj.items()}
+        result = {}
+        for k, v in obj.items():
+            if k == "_id":
+                result["id"] = str(v)
+            elif isinstance(v, ObjectId):
+                result[k] = str(v)
+            else:
+                result[k] = v
+        return result
     return obj
 
 
